@@ -1,11 +1,10 @@
-// lib/features/auth/data/data_sources/auth_local_data_source.dart
-import 'package:auth_clean_architecture/features/auth/domian/entities/user.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../models/user_model.dart';
 
 abstract class AuthLocalDataSource {
-  Future<void> saveUser(User user);
-  Future<User?> getUser();
+  Future<void> saveUser(UserModel user);
+  Future<UserModel?> getUser();
   Future<void> clearUser();
   Future<void> cacheUserToken(String token);
   Future<String?> getCachedUserToken();
@@ -17,29 +16,19 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
   static const String TOKEN_KEY = 'USER_TOKEN';
 
   @override
-  Future<void> saveUser(User user) async {
+  Future<void> saveUser(UserModel user) async {
     final prefs = await SharedPreferences.getInstance();
-    prefs.setString(USER_KEY, jsonEncode({
-      'id': user.id,
-      'name': user.name,
-      'email': user.email,
-      'password': user.password,
-    }));
-    print('User saved locally');
+    await prefs.setString(USER_KEY, jsonEncode(user.toJson()));
   }
 
   @override
-  Future<User?> getUser() async {
+  Future<UserModel?> getUser() async {
     final prefs = await SharedPreferences.getInstance();
     final jsonString = prefs.getString(USER_KEY);
     if (jsonString == null) return null;
+
     final data = jsonDecode(jsonString);
-    return User(
-      id: data['id'],
-      name: data['name'],
-      email: data['email'],
-      password: data['password'],
-    );
+    return UserModel.fromJson(data);
   }
 
   @override
